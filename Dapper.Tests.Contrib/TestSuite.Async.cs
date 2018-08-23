@@ -11,6 +11,78 @@ namespace Dapper.Tests.Contrib
 {
     public abstract partial class TestSuite
     {
+        [Fact]
+        public async Task TypeWithGenericParameterCanBeInsertedAsync()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                await connection.DeleteAllAsync<GenericType<string>>();
+                var objectToInsert = new GenericType<string>
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "something"
+                };
+                await connection.InsertAsync(objectToInsert);
+
+                Assert.Single(connection.GetAll<GenericType<string>>());
+
+                var objectsToInsert = new List<GenericType<string>>
+                {
+                    new GenericType<string>
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = "1",
+                    },
+                    new GenericType<string>
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = "2",
+                    }
+                };
+
+                await connection.InsertAsync(objectsToInsert);
+                var list = connection.GetAll<GenericType<string>>();
+                Assert.Equal(3, list.Count());
+            }
+        }
+
+        [Fact]
+        public async Task TypeWithGenericParameterCanBeUpdatedAsync()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var objectToInsert = new GenericType<string>
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "something"
+                };
+                await connection.InsertAsync(objectToInsert);
+
+                objectToInsert.Name = "somethingelse";
+                await connection.UpdateAsync(objectToInsert);
+
+                var updatedObject = connection.Get<GenericType<string>>(objectToInsert.Id);
+                Assert.Equal(objectToInsert.Name, updatedObject.Name);
+            }
+        }
+
+        [Fact]
+        public async Task TypeWithGenericParameterCanBeDeletedAsync()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var objectToInsert = new GenericType<string>
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = "something"
+                };
+                await connection.InsertAsync(objectToInsert);
+
+                bool deleted = await connection.DeleteAsync(objectToInsert);
+                Assert.True(deleted);
+            }
+        }
+
         /// <summary>
         /// Tests for issue #351 
         /// </summary>
@@ -191,6 +263,12 @@ namespace Dapper.Tests.Contrib
         }
 
         [Fact]
+        public async Task InsertEnumerableAsync()
+        {
+            await InsertHelperAsync(src => src.AsEnumerable()).ConfigureAwait(false);
+        }
+
+        [Fact]
         public async Task InsertArrayAsync()
         {
             await InsertHelperAsync(src => src.ToArray()).ConfigureAwait(false);
@@ -220,6 +298,12 @@ namespace Dapper.Tests.Contrib
                 users = connection.Query<User>("select * from Users").ToList();
                 Assert.Equal(users.Count, numberOfEntities);
             }
+        }
+
+        [Fact]
+        public async Task UpdateEnumerableAsync()
+        {
+            await UpdateHelperAsync(src => src.AsEnumerable()).ConfigureAwait(false);
         }
 
         [Fact]
@@ -259,6 +343,12 @@ namespace Dapper.Tests.Contrib
                 var name = connection.Query<User>("select * from Users").First().Name;
                 Assert.Contains("updated", name);
             }
+        }
+
+        [Fact]
+        public async Task DeleteEnumerableAsync()
+        {
+            await DeleteHelperAsync(src => src.AsEnumerable()).ConfigureAwait(false);
         }
 
         [Fact]
@@ -317,6 +407,30 @@ namespace Dapper.Tests.Contrib
                 Assert.Equal(users.Count, numberOfEntities);
                 var iusers = await connection.GetAllAsync<IUser>().ConfigureAwait(false);
                 Assert.Equal(iusers.ToList().Count, numberOfEntities);
+            }
+        }
+
+        /// <summary>
+        /// Test for issue #933
+        /// </summary>
+        [Fact]
+        public async void GetAsyncAndGetAllAsyncWithNullableValues()
+        {
+            using (var connection = GetOpenConnection())
+            {
+                var id1 = connection.Insert(new NullableDate { DateValue = new DateTime(2011, 07, 14) });
+                var id2 = connection.Insert(new NullableDate { DateValue = null });
+
+                var value1 = await connection.GetAsync<INullableDate>(id1).ConfigureAwait(false);
+                Assert.Equal(new DateTime(2011, 07, 14), value1.DateValue.Value);
+
+                var value2 = await connection.GetAsync<INullableDate>(id2).ConfigureAwait(false);
+                Assert.True(value2.DateValue == null);
+
+                var value3 = await connection.GetAllAsync<INullableDate>().ConfigureAwait(false);
+                var valuesList = value3.ToList();
+                Assert.Equal(new DateTime(2011, 07, 14), valuesList[0].DateValue.Value);
+                Assert.True(valuesList[1].DateValue == null);
             }
         }
 

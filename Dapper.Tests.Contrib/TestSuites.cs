@@ -55,6 +55,10 @@ namespace Dapper.Tests.Contrib
                 connection.Execute("CREATE TABLE ObjectY (ObjectYId int not null, Name nvarchar(100) not null);");
                 dropTable("ObjectZ");
                 connection.Execute("CREATE TABLE ObjectZ (Id int not null, Name nvarchar(100) not null);");
+                dropTable("GenericType");
+                connection.Execute("CREATE TABLE GenericType (Id nvarchar(100) not null, Name nvarchar(100) not null);");
+                dropTable("NullableDates");
+                connection.Execute("CREATE TABLE NullableDates (Id int IDENTITY(1,1) not null, DateValue DateTime null);");
             }
         }
     }
@@ -102,6 +106,10 @@ namespace Dapper.Tests.Contrib
                     connection.Execute("CREATE TABLE ObjectY (ObjectYId int not null, Name nvarchar(100) not null);");
                     dropTable("ObjectZ");
                     connection.Execute("CREATE TABLE ObjectZ (Id int not null, Name nvarchar(100) not null);");
+                    dropTable("GenericType");
+                    connection.Execute("CREATE TABLE GenericType (Id nvarchar(100) not null, Name nvarchar(100) not null);");
+                    dropTable("NullableDates");
+                    connection.Execute("CREATE TABLE NullableDates (Id int not null AUTO_INCREMENT PRIMARY KEY, DateValue DateTime);");
                 }
             }
             catch (MySqlException e)
@@ -137,6 +145,8 @@ namespace Dapper.Tests.Contrib
                 connection.Execute("CREATE TABLE ObjectX (ObjectXId nvarchar(100) not null, Name nvarchar(100) not null) ");
                 connection.Execute("CREATE TABLE ObjectY (ObjectYId integer not null, Name nvarchar(100) not null) ");
                 connection.Execute("CREATE TABLE ObjectZ (Id integer not null, Name nvarchar(100) not null) ");
+                connection.Execute("CREATE TABLE GenericType (Id nvarchar(100) not null, Name nvarchar(100) not null) ");
+                connection.Execute("CREATE TABLE NullableDates (Id integer primary key autoincrement not null, DateValue DateTime) ");
             }
         }
     }
@@ -167,6 +177,8 @@ namespace Dapper.Tests.Contrib
                 connection.Execute(@"CREATE TABLE ObjectX (ObjectXId nvarchar(100) not null, Name nvarchar(100) not null) ");
                 connection.Execute(@"CREATE TABLE ObjectY (ObjectYId int not null, Name nvarchar(100) not null) ");
                 connection.Execute(@"CREATE TABLE ObjectZ (Id int not null, Name nvarchar(100) not null) ");
+                connection.Execute(@"CREATE TABLE GenericType (Id nvarchar(100) not null, Name nvarchar(100) not null) ");
+                connection.Execute(@"CREATE TABLE NullableDates (Id int IDENTITY(1,1) not null, DateValue DateTime null) ");
             }
             Console.WriteLine("Created database");
         }
